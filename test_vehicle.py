@@ -3,12 +3,12 @@ from ursina import *
 class Car(Entity):
     def __init__(self, **kwargs):
         super().__init__()
-        self.model = 'cube'  # Substitua pelo seu modelo 3D de carro
+        self.model = 'assets/models/uno.obj'  # Substitua pelo seu modelo 3D de carro
         self.texture = 'white_cube'
-        self.scale = (1.5, 0.5, 3)  # Um formato simplificado para o carro
+        #self.scale = (1, 1, 1)  # Um formato simplificado para o carro
         self.speed = 0
-        self.max_speed = 20
-        self.acceleration = 10
+        self.max_speed = 120
+        self.acceleration = 20
         self.friction = 1
         self.turn_speed = 60
         self.wheel_angle = 0
@@ -38,11 +38,11 @@ class Car(Entity):
 
         # Girar o carro
         if held_keys['a']:
-            self.wheel_angle -= (self.turn_speed / 2) * (time.dt * 8)
+            self.wheel_angle -= (self.turn_speed) * (time.dt * 5)
         elif held_keys['d']:
-            self.wheel_angle += (self.turn_speed / 2) * (time.dt * 8)
+            self.wheel_angle += (self.turn_speed) * (time.dt * 5)
         else:
-            self.wheel_angle = lerp(self.wheel_angle, 0, time.dt * 12)  # Volta ao centro
+            self.wheel_angle = lerp(self.wheel_angle, 0, time.dt * 20)  # Volta ao centro
 
         # Aplicar rotação à medida que o carro se move
         if self.speed != 0:
@@ -95,19 +95,23 @@ class FollowCamera:
         camera.rotation_z = 0  # Impede tombamento lateral
 
 
-class Game(Ursina):
-    def __init__(self):
-        super().__init__(borderless=False)
-        self.car = Car(position=(0, 1, 0))
-        self.ground = Entity(model='plane', texture='grass', scale=(100, 1, 100), collider='mesh')  # Colisão no solo
-        
-        # Inicializando a câmera para seguir o carro
-        self.camera_controller = FollowCamera(self.car, distance=10, height=7, smoothing=4)
-
-# Função global de update que é chamada a cada frame
 def update():
-    game.camera_controller.update()
+    """ Atualização global que será chamada a cada frame """
+    camera_controller.update()  # Atualiza diretamente o controlador de câmera
 
-if __name__ == '__main__':
-    game = Game()
-    game.run()
+
+# Cria a instância do jogo
+app = Ursina()
+
+# Configura a janela
+window.borderless = False
+
+# Instancia o carro e o solo
+car = Car(position=(15, 10, 0))
+ground = Entity(model='assets/models/FullTrack.obj', texture='assets/textures/FullTrack.png', scale=(50, 50, 50), collider='mesh')
+
+# Configura a câmera para seguir o carro
+camera_controller = FollowCamera(car, distance = 25, height = 7, smoothing = 4)
+
+# Executa o jogo
+app.run()
