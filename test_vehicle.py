@@ -1,5 +1,4 @@
 from ursina import *
-from ursina import EditorCamera
 
 class Car(Entity):
     def __init__(self, **kwargs):
@@ -57,13 +56,48 @@ class Car(Entity):
         forward = Vec3(0, 0, 1)
         self.velocity = self.forward * self.speed * time.dt
         self.position += self.velocity
+        
+class FollowCamera:
+    def __init__(self, target, distance=10, height=5, smoothing=4):
+        """ Inicializa a câmera que segue o alvo.
+        :param target: O objeto que a câmera deve seguir.
+        :param distance: A distância que a câmera ficará atrás do alvo.
+        :param height: A altura da câmera em relação ao alvo.
+        :param smoothing: O fator de suavização do movimento da câmera.
+        """
+        self.target = target  # O objeto a ser seguido (carro)
+        self.distance = distance  # Distância atrás do alvo
+        self.height = height  # Altura da câmera
+        self.smoothing = smoothing  # Suavização do movimento
+
+    def update(self):
+        """ Atualiza a posição da câmera para seguir o alvo suavemente. """
+        # Posição desejada da câmera (atrás e acima do alvo)
+        target_position = self.target.position + self.target.forward * -self.distance + Vec3(0, self.height, 0)
+
+        # Atualiza a posição da câmera suavemente usando interpolação linear (lerp)
+        camera.position = lerp(camera.position, target_position, self.smoothing * time.dt)
+
+        # Faz a câmera olhar para o alvo
+        camera.look_at(self.target.position)
+
+        # Trava a rotação nos eixos X e Z para impedir que a câmera tombe
+        camera.rotation_x = 12  # Impede inclinação vertical
+        camera.rotation_z = 0  # Impede tombamento lateral
+
 
 class Game(Ursina):
     def __init__(self):
         super().__init__(borderless=False)
-        self.car = Car(position=(0, 0, 0))
+        self.car = Car(position=(0, 1, 0))
         self.ground = Entity(model='plane', texture='grass', scale=(100, 1, 100))
-        EditorCamera()
+        
+        # Inicializando a câmera para seguir o carro
+        self.camera_controller = FollowCamera(self.car, distance=10, height=7, smoothing=4)
+
+# Função global de update que é chamada a cada frame
+def update():
+    game.camera_controller.update()
 
 if __name__ == '__main__':
     game = Game()
