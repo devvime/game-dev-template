@@ -13,7 +13,6 @@ class Car(Entity):
         self.turn_speed = 60
         self.wheel_angle = 0
         self.velocity = Vec3(0, 0, 0)
-        self.collider = 'box'  # Adiciona um collider de caixa ao carro
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -23,7 +22,6 @@ class Car(Entity):
         self.handle_input()
         # Atualização da física simples do carro
         self.apply_friction()
-        self.apply_gravity()
         self.move_car()
 
     def handle_input(self):
@@ -53,19 +51,12 @@ class Car(Entity):
         if not held_keys['w'] and not held_keys['s']:
             self.speed = lerp(self.speed, 0, self.friction * time.dt)
 
-    def apply_gravity(self):
-        # Simula a gravidade básica
-        ray = raycast(self.position, self.down, distance=1.5, ignore=(self,))
-        if not ray.hit:
-            self.position += Vec3(0, -9.8 * time.dt, 0)  # Simula a gravidade se não estiver no chão
-
     def move_car(self):
         # Mover o carro na direção que ele está virado
         forward = Vec3(0, 0, 1)
         self.velocity = self.forward * self.speed * time.dt
         self.position += self.velocity
-
-
+        
 class FollowCamera:
     def __init__(self, target, distance=10, height=5, smoothing=4):
         """ Inicializa a câmera que segue o alvo.
@@ -99,7 +90,7 @@ class Game(Ursina):
     def __init__(self):
         super().__init__(borderless=False)
         self.car = Car(position=(0, 1, 0))
-        self.ground = Entity(model='plane', texture='grass', scale=(100, 1, 100), collider='mesh')  # Colisão no solo
+        self.ground = Entity(model='plane', texture='grass', scale=(100, 1, 100))
         
         # Inicializando a câmera para seguir o carro
         self.camera_controller = FollowCamera(self.car, distance=10, height=7, smoothing=4)
