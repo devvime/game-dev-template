@@ -5,8 +5,9 @@ class Scene(Entity):
         super().__init__()
         self.elements = []
 
-    def add_element(self, element):
-        self.elements.append(element)
+    def add_element(self, elements = []):
+        for element in elements:
+            self.elements.append(element)
         
     def update(self):
         pass

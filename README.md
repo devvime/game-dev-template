@@ -3,7 +3,7 @@
 ### Installing dependencies
 
 ```bash
-pip install ursina
+pip install -r requirements.txt
 ```
 
 ### Directory structure
@@ -40,17 +40,33 @@ pip install ursina
 
 ```python
 from ursina import *
+from ursina.shaders import lit_with_shadows_shader
 from Core.Scene import Scene
 
 class GameScene(Scene):
     def __init__(self):
         super().__init__()
-        self.player = Entity(model='cube', color=color.azure, position=(0, 1, 0))
-        self.ground = Entity(model='plane', scale=(10, 1, 10), texture='white_cube', collider='box')
+        
+        self.environment()
+        
+        self.player = Entity(model='cube', texture='white_cube', position=(0, 10, 0), shader=lit_with_shadows_shader)
+        self.ground = Entity(model='plane', scale=(10, 1, 10), texture='white_cube', collider='box', shader=lit_with_shadows_shader)
         
         # Add elements to the scene element list
-        self.add_element(self.player)
-        self.add_element(self.ground)
+        self.addElements()
+        
+    def addElements(self):
+        self.add_element([self.editorCamera, self.sky, self.light, self.player, self.ground])
+        
+    def update(self):
+        pass
+        
+    def environment(self):
+        self.editorCamera = EditorCamera()
+        self.sky = Sky()        
+        
+        self.light = DirectionalLight(shadows=True)
+        self.light.look_at(Vec3(1,-1,1))
 
     def enable(self):
         super().enable()
