@@ -2,8 +2,9 @@ from ursina import *
 from Core.Scene import Scene
 
 class MenuScene(Scene):
-    def __init__(self):
+    def __init__(self, scene_manager):
         super().__init__()
+        self.scene_manager = scene_manager
         
         self.title = Text("Menu Scene", scale=2, position=(0, 0.4))
         self.add_element(self.title)
@@ -17,8 +18,6 @@ class MenuScene(Scene):
         self.add_element(self.exit_button)
         
     def start_game(self):
-        from Core.SceneManager import SceneManager
-        self.scene_manager = SceneManager()
         self.scene_manager.switch_to('game')
 
     def enable(self):

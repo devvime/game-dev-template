@@ -7,6 +7,9 @@ class Scene(Entity):
 
     def add_element(self, element):
         self.elements.append(element)
+        
+    def update(self):
+        pass
 
     def enable(self):
         for element in self.elements:

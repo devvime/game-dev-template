@@ -18,3 +18,7 @@ class SceneManager:
         
         self.current_scene = sceneData[name]
         self.current_scene.enable()
+        
+    def update(self):
+        if self.current_scene:
+            self.current_scene.update()
