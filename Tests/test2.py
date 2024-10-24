@@ -14,7 +14,7 @@ class PhysicsEntity(Entity):
         # Inicializar o cliente de física do PyBullet
         if physics_client is None:
             physics_client = p.connect(p.DIRECT)
-            p.setGravity(0, -9.81, 0, physicsClientId=physics_client)
+            p.setGravity(0, -100, 0, physicsClientId=physics_client)
             p.setAdditionalSearchPath(pybullet_data.getDataPath())
         
         # Criar a forma de colisão e o corpo rígido
@@ -67,10 +67,12 @@ def update():
 app = Ursina(borderless=False)
 
 # Criar o chão visual na Ursina
-ground = Entity(model='plane', scale=(10, 1, 10), color=color.green)
+ground = PhysicsEntity(model='plane', scale=(10, 1, 10), position=(0, 0, 0), texture='grass', collider='box', mass=0)
 
 # Instanciar o player
 player = Player()
+
+EditorCamera()
 
 # Chamar a simulação do PyBullet a cada frame
 app.run()
