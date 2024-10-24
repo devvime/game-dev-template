@@ -5,7 +5,11 @@ from Scenes.Menu import MenuScene
 from Scenes.Game import GameScene
 
 app = Ursina(
+    title='My Game',
     borderless=False,
+    fullscreen=False,
+    vsync=False,
+    development_mode=True,
     show_ursina_splash=True
 )
 
