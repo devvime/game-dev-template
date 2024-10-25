@@ -1,111 +1,149 @@
 from ursina import *
-from ursina.prefabs.first_person_controller import FirstPersonController
-from ursina.shaders import lit_with_shadows_shader
-
-app = Ursina(borderless=False)
-
-random.seed(0)
-Entity.default_shader = lit_with_shadows_shader
-
-ground = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
-
-editor_camera = EditorCamera(enabled=False, ignore_paused=True)
-player = FirstPersonController(model='cube', z=-10, color=color.orange, origin_y=-.5, speed=8, collider='box')
-player.collider = BoxCollider(player, Vec3(0,1,0), Vec3(1,2,1))
-
-gun = Entity(model='cube', parent=camera, position=(.5,-.25,.25), scale=(.3,.2,1), origin_z=-.5, color=color.red, on_cooldown=False)
-gun.muzzle_flash = Entity(parent=gun, z=1, world_scale=.5, model='quad', color=color.yellow, enabled=False)
-
-shootables_parent = Entity()
-mouse.traverse_target = shootables_parent
 
 
-for i in range(16):
-    Entity(model='cube', origin_y=-.5, scale=2, texture='brick', texture_scale=(1,2),
-        x=random.uniform(-8,8),
-        z=random.uniform(-8,8) + 8,
-        collider='box',
-        scale_y = random.uniform(2,3),
-        color=color.hsv(0, 0, random.uniform(.9, 1))
-        )
+class PhysicsComponent:
+    def __init__(self, entity, gravity=1, jump_height=2, jump_up_duration=0.5, fall_after=0.35):
+        self.entity = entity
+        self.gravity = gravity
+        self.jump_height = jump_height
+        self.jump_up_duration = jump_up_duration
+        self.fall_after = fall_after
+        self.grounded = False
+        self.air_time = 0
+        self.traverse_target = scene
+        self.ignore_list = [self.entity]
 
-def update():
-    if held_keys['left mouse']:
-        shoot()
+        # Posiciona a entidade no chão, se ela começar dentro do terreno
+        self.initialize_position()
 
-def shoot():
-    if not gun.on_cooldown:
-        # print('shoot')
-        gun.on_cooldown = True
-        gun.muzzle_flash.enabled=True
-        from ursina.prefabs.ursfx import ursfx
-        ursfx([(0.0, 0.0), (0.1, 0.9), (0.15, 0.75), (0.3, 0.14), (0.6, 0.0)], volume=0.5, wave='noise', pitch=random.uniform(-13,-12), pitch_change=-12, speed=3.0)
-        invoke(gun.muzzle_flash.disable, delay=.05)
-        invoke(setattr, gun, 'on_cooldown', False, delay=.15)
-        if mouse.hovered_entity and hasattr(mouse.hovered_entity, 'hp'):
-            mouse.hovered_entity.hp -= 10
-            mouse.hovered_entity.blink(color.red)
+    def initialize_position(self):
+        if self.gravity:
+            ray = raycast(self.entity.world_position + (0, self.entity.height, 0), self.entity.down, 
+                          traverse_target=self.traverse_target, ignore=self.ignore_list)
+            if ray.hit:
+                self.entity.y = ray.world_point.y
+
+    def apply_gravity(self):
+        if self.gravity:
+            ray = raycast(self.entity.world_position + (0, self.entity.height, 0), self.entity.down, 
+                          traverse_target=self.traverse_target, ignore=self.ignore_list)
+
+            if ray.distance <= self.entity.height + 0.1:
+                if not self.grounded:
+                    self.land()
+                self.grounded = True
+                if ray.world_normal.y > 0.7 and ray.world_point.y - self.entity.world_y < 0.5:
+                    self.entity.y = ray.world_point[1]
+            else:
+                self.grounded = False
+                self.entity.y -= min(self.air_time, ray.distance - 0.05) * time.dt * 100
+                self.air_time += time.dt * 0.25 * self.gravity
+
+    def jump(self):
+        if not self.grounded:
+            return
+
+        self.grounded = False
+        self.entity.animate_y(self.entity.y + self.jump_height, self.jump_up_duration, 
+                              resolution=int(1 // time.dt), curve=curve.out_expo)
+        invoke(self.start_fall, delay=self.fall_after)
+
+    def start_fall(self):
+        self.entity.y_animator.pause()
+
+    def land(self):
+        self.air_time = 0
+        self.grounded = True
 
 
-from ursina.prefabs.health_bar import HealthBar
-
-class Enemy(Entity):
+class FirstPersonController(Entity):
     def __init__(self, **kwargs):
-        super().__init__(parent=shootables_parent, model='cube', scale_y=2, origin_y=-.5, color=color.light_gray, collider='box', **kwargs)
-        self.health_bar = Entity(parent=self, y=1.2, model='cube', color=color.red, world_scale=(1.5,.1,.1))
-        self.max_hp = 100
-        self.hp = self.max_hp
+        self.cursor = Entity(parent=camera.ui, model='quad', color=color.pink, scale=0.008, rotation_z=45)
+        super().__init__()
+        self.speed = 5
+        self.height = 2
+        self.camera_pivot = Entity(parent=self, y=self.height)
+        self.mouse_sensitivity = Vec2(40, 40)
+
+        camera.parent = self.camera_pivot
+        camera.position = (0, 0, 0)
+        camera.rotation = (0, 0, 0)
+        camera.fov = 90
+        mouse.locked = True
+
+        self.physics = PhysicsComponent(entity=self)
+        self.traverse_target = scene
+        self.ignore_list = [self]
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def update(self):
-        dist = distance_xz(player.position, self.position)
-        if dist > 40:
-            return
+        self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
+        self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]
+        self.camera_pivot.rotation_x = clamp(self.camera_pivot.rotation_x, -90, 90)
 
-        self.health_bar.alpha = max(0, self.health_bar.alpha - time.dt)
+        direction = Vec3(
+            self.forward * (held_keys['w'] - held_keys['s'])
+            + self.right * (held_keys['d'] - held_keys['a'])
+        ).normalized()
 
+        feet_ray = raycast(self.position + Vec3(0, 0.5, 0), direction, traverse_target=self.traverse_target, 
+                           ignore=self.ignore_list, distance=0.5, debug=False)
+        head_ray = raycast(self.position + Vec3(0, self.height - 0.1, 0), direction, traverse_target=self.traverse_target, 
+                           ignore=self.ignore_list, distance=0.5, debug=False)
 
-        self.look_at_2d(player.position, 'y')
-        hit_info = raycast(self.world_position + Vec3(0,1,0), self.forward, 30, ignore=(self,))
-        # print(hit_info.entity)
-        if hit_info.entity == player:
-            if dist > 2:
-                self.position += self.forward * time.dt * 5
+        if not feet_ray.hit and not head_ray.hit:
+            move_amount = direction * time.dt * self.speed
 
-    @property
-    def hp(self):
-        return self._hp
+            for axis, direction in zip([Vec3(1, 0, 0), Vec3(-1, 0, 0), Vec3(0, 0, 1), Vec3(0, 0, -1)], [0, 0, 2, 2]):
+                ray = raycast(self.position + Vec3(0, 1, 0), axis, distance=0.5, traverse_target=self.traverse_target, 
+                              ignore=self.ignore_list)
+                if ray.hit:
+                    move_amount[direction] = min(move_amount[direction], 0) if axis[direction] > 0 else max(move_amount[direction], 0)
 
-    @hp.setter
-    def hp(self, value):
-        self._hp = value
-        if value <= 0:
-            destroy(self)
-            return
+            self.position += move_amount
 
-        self.health_bar.world_scale_x = self.hp / self.max_hp * 1.5
-        self.health_bar.alpha = 1
+        self.physics.apply_gravity()
 
-# Enemy()
-enemies = [Enemy(x=x*4) for x in range(4)]
-
-
-def pause_input(key):
-    if key == 'tab':    # press tab to toggle edit/play mode
-        editor_camera.enabled = not editor_camera.enabled
-
-        player.visible_self = editor_camera.enabled
-        player.cursor.enabled = not editor_camera.enabled
-        gun.enabled = not editor_camera.enabled
-        mouse.locked = not editor_camera.enabled
-        editor_camera.position = player.position
-
-        application.paused = editor_camera.enabled
-
-pause_handler = Entity(ignore_paused=True, input=pause_input)
+    def input(self, key):
+        if key == 'space':
+            self.physics.jump()
 
 
-sun = DirectionalLight()
-sun.look_at(Vec3(1,-1,-1))
-Sky()
+if __name__ == '__main__':
+    from ursina.prefabs.first_person_controller import FirstPersonController
+    window.vsync = False
+    app = Ursina(borderless=False)
+    ground = Entity(model='plane', scale=(100,1,100), color=color.yellow.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
+    e = Entity(model='cube', scale=(1,5,10), x=2, y=.01, rotation_y=45, collider='box', texture='white_cube')
+    e.texture_scale = (e.scale_z, e.scale_y)
+    e = Entity(model='cube', scale=(1,5,10), x=-2, y=.01, collider='box', texture='white_cube')
+    e.texture_scale = (e.scale_z, e.scale_y)
 
-app.run()
+    player = FirstPersonController(y=2, origin_y=-.5)
+    player.gun = None
+
+    gun = Button(parent=scene, model='cube', color=color.blue, origin_y=-.5, position=(3,0,3), collider='box', scale=(.2,.2,1))
+    def get_gun():
+        gun.parent = camera
+        gun.position = Vec3(.5,0,.5)
+        player.gun = gun
+    gun.on_click = get_gun
+
+    gun_2 = duplicate(gun, z=7, x=8)
+    slope = Entity(model='cube', collider='box', position=(0,0,8), scale=6, rotation=(45,0,0), texture='brick', texture_scale=(8,8))
+    slope = Entity(model='cube', collider='box', position=(5,0,10), scale=6, rotation=(80,0,0), texture='brick', texture_scale=(8,8))
+
+    hookshot_target = Button(parent=scene, model='cube', color=color.brown, position=(4,5,5))
+    hookshot_target.on_click = Func(player.animate_position, hookshot_target.position, duration=.5, curve=curve.linear)
+
+    def input(key):
+        if key == 'left mouse down' and player.gun:
+            gun.blink(color.orange)
+            bullet = Entity(parent=gun, model='cube', scale=.1, color=color.black)
+            bullet.world_parent = scene
+            bullet.animate_position(bullet.position + (bullet.forward * 50), curve=curve.linear, duration=1)
+            destroy(bullet, delay=1)
+
+    app.run()

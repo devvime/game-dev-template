@@ -1,4 +1,5 @@
 from ursina import *
+from ursina.shaders import lit_with_shadows_shader
 from Core.SceneManager import SceneManager
 
 from Scenes.Menu import MenuScene
@@ -12,6 +13,8 @@ app = Ursina(
     development_mode=True,
     show_ursina_splash=False
 )
+
+Entity.default_shader = lit_with_shadows_shader
 
 scene_manager = SceneManager()
 

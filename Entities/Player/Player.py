@@ -1,4 +1,5 @@
 from ursina import *
+from ursina.shaders import lit_with_shadows_shader
 
 class Player(Entity):
     def __init__(self):
@@ -7,6 +8,7 @@ class Player(Entity):
             color=color.orange,
             collider='box',  
             position=(0, 0.5, 0),  # Levantar o player pela metade da altura do cubo (0.5)
+            shader=lit_with_shadows_shader
         )
         self.speed = 5
         self.rotation_speed = 100

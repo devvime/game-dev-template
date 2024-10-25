@@ -1,5 +1,4 @@
 from ursina import *
-from ursina.shaders import lit_with_shadows_shader
 from ursina.shaders.screenspace_shaders.pixelation_shader import pixelation_shader
 from Core.Scene import Scene
 
@@ -12,19 +11,13 @@ class GameScene(Scene):
         self.environment()
         
         self.player = Player()
-        self.ground = Entity(model='plane', scale=(10, 1, 10), position=(0, 0, 0), texture='grass', collider='box', shader=lit_with_shadows_shader)
-        
-        self.cube = Entity(model='cube',    
-            color=color.red,
-            collider='box',  
-            position=(5, 0.5, 0)
-        )
+        self.ground = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
         
         # Add elements to the scene element list
         self.addElements()
         
     def addElements(self):
-        self.add_element([self.editorCamera, self.sky, self.light, self.player, self.ground, self.cube])
+        self.add_element([self.editorCamera, self.sky, self.light, self.player, self.ground])
         
     def update(self):
         pass
