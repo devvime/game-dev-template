@@ -25,7 +25,7 @@ class GameScene(Scene):
         self.obstacle = Box(mass=1)
         self.obstacle.position = (2, 5, 5)
         
-        self.obstacle2 = Box(mass=3)
+        self.obstacle2 = Box(mass=5, pushable=True)
         self.obstacle2.position = (4, 10, 3)
         
         # Add elements to the scene element list

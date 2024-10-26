@@ -55,7 +55,7 @@ class PhysicsEntity(Entity):
     def check_collisions(self, movement_direction):
         # Verificando colisões para cada direção
         for offset in [Vec3(0.5, 0, 0), Vec3(-0.5, 0, 0), Vec3(0, 0, 0.5), Vec3(0, 0, -0.5)]:
-            ray = raycast(self.position + offset, movement_direction, ignore=[self], distance=movement_direction.length() + 0.5)
+            ray = raycast(self.position + offset, movement_direction, ignore=[self], distance=movement_direction.length() + 0.6)
             if ray.hit:
                 # Ajustar a posição para evitar que entre no objeto
                 self.position -= movement_direction * (movement_direction.length() + ray.distance)
@@ -64,14 +64,44 @@ class PhysicsEntity(Entity):
 
     def push_objects(self, movement_direction):
         # Verificar se há objetos que podem ser empurrados
-        ray = raycast(self.position + self.forward * 0.5, self.forward, ignore=[self], distance=0.6)
+        ray = raycast(self.position + self.forward * 0.5, self.forward, ignore=[self], distance=0.7)
         if ray.hit and hasattr(ray.entity, 'pushable') and ray.entity.pushable:
             self.current_pushable = ray.entity  # Armazenar o objeto atual que está sendo empurrado
+            
             # Calcular a direção de empurrão com base no movimento do player
             push_direction = movement_direction.normalized()
-            ray.entity.position += push_direction * 0.5  # Ajustar a força de empurrão aqui
+            # Suavizar o movimento de empurrar, mantendo a posição Y do objeto
+            ray.entity.position += Vec3(push_direction.x, 0, push_direction.z) * time.dt * (self.run_speed * 2 / ray.entity.mass)  # Não alterar a posição Y
+            
+            # Ajustar a posição do player para evitar que entre no objeto
+            if push_direction.length() > 0:
+                overlap_distance = (self.current_pushable.scale_x / 2) + (self.scale_x / 2)
+                if distance(self.position, ray.entity.position) < overlap_distance:  # Usando a função distance correta
+                    self.position -= push_direction * (overlap_distance - distance(self.position, ray.entity.position))
+
+            # Empurrar objetos próximos
+            self.check_nearby_pushable_objects(ray.entity)
+
         else:
             self.current_pushable = None  # Resetar se não houver objeto sendo empurrado
+
+    def check_nearby_pushable_objects(self, pushed_object):
+        # Verifica se há objetos próximos que também podem ser empurrados
+        nearby_objects = [obj for obj in self.get_pushable_objects() if obj != pushed_object]
+
+        for obj in nearby_objects:
+            if distance(pushed_object.position, obj.position) < 1.0:  # Ajuste a distância conforme necessário
+                # Calcular a direção para empurrar o objeto
+                direction_to_obj = (obj.position - pushed_object.position).normalized()
+                overlap_distance = (pushed_object.scale_x / 2) + (obj.scale_x / 2)
+
+                # Ajustar a posição do objeto empurrado
+                if distance(pushed_object.position, obj.position) < overlap_distance:
+                    obj.position += direction_to_obj * (overlap_distance - distance(pushed_object.position, obj.position))
+
+    def get_pushable_objects(self):
+        # Retorna uma lista de todos os objetos empurráveis na cena
+        return [entity for entity in scene.entities if hasattr(entity, 'pushable') and entity.pushable]
 
     def is_on_ground(self):
         ray = raycast(self.world_position, self.down, ignore=[self], distance=0.6)

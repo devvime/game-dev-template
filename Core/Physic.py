@@ -1,62 +1,111 @@
 from ursina import *
 
-class PhysicsComponent:
-    def __init__(self, entity, gravity=1, jump_height=2, jump_up_duration=0.5, fall_after=0.35):
-        self.entity = entity
-        self.gravity = gravity
-        self.jump_height = jump_height
-        self.jump_up_duration = jump_up_duration
-        self.fall_after = fall_after
-        self.grounded = False
-        self.air_time = 0
-        self.traverse_target = scene
-        self.ignore_list = [self.entity]
+class PhysicsEntity(Entity):
+    def __init__(self, mass=1, pushable=False, **kwargs):
+        super().__init__(**kwargs)
+        self.gravity = 1
+        self.velocity_y = 0
+        self.jump_height = 0.2
+        self.walk_speed = 2
+        self.run_speed = 4
+        self.rotation_speed = 100
+        self.pushable = pushable  # Atributo para determinar se a entidade pode ser empurrada
+        self.mass = mass  # Massa do objeto
 
-        self.initialize_position()
-
-    def initialize_position(self):
-        if self.gravity:
-            ray = raycast(
-                self.entity.world_position + (0, self.entity.height, 0), 
-                self.entity.down, 
-                traverse_target=self.traverse_target, 
-                ignore=self.ignore_list
-            )
-            if ray.hit:
-                self.entity.y = ray.world_point.y
+    def update_physics(self):
+        self.apply_gravity()
+        self.check_ground_collision()
 
     def apply_gravity(self):
-        if self.gravity:
-            ray = raycast(
-                self.entity.world_position + (0, self.entity.height, 0), 
-                self.entity.down, 
-                traverse_target=self.traverse_target, 
-                ignore=self.ignore_list
-            )
+        self.velocity_y -= self.gravity * time.dt / 2
+        self.y += self.velocity_y
 
-            if ray.distance <= self.entity.height + 0.1:
-                if not self.grounded:
-                    self.land()
-                self.grounded = True
-                if ray.world_normal.y > 0.7 and ray.world_point.y - self.entity.world_y < 0.5:
-                    self.entity.y = ray.world_point[1]
-            else:
-                self.grounded = False
-                self.entity.y -= min(self.air_time, ray.distance - 0.05) * time.dt * 100
-                self.air_time += time.dt * 0.25 * self.gravity
+    def check_ground_collision(self):
+        ray = raycast(self.world_position, self.down, ignore=[self], distance=0.6)
+        if ray.hit:
+            self.velocity_y = 0
+            self.y = ray.world_point.y + 0.5
+
+    def move(self, direction):
+        speed = self.run_speed if held_keys['shift'] else self.walk_speed
+        
+        # Ajustar a velocidade se estiver empurrando um objeto
+        if self.is_pushing():
+            speed *= (1 - (self.current_pushable.mass / 10))  # Reduzir a velocidade baseada na massa
+
+        movement_direction = direction * speed * time.dt
+
+        # Checar colisões em múltiplas direções
+        if not self.check_collisions(movement_direction):
+            self.position += movement_direction
+
+            # Tentar empurrar objetos colididos
+            self.push_objects(movement_direction)
+
+    def move_forward(self):
+        self.move(self.forward)
+
+    def move_backward(self):
+        self.move(-self.forward)
 
     def jump(self):
-        if not self.grounded:
-            return
+        if self.is_on_ground():  # Verificar se a entidade está no chão
+            self.velocity_y = self.jump_height
 
-        self.grounded = False
-        self.entity.animate_y(self.entity.y + self.jump_height, self.jump_up_duration, 
-                              resolution=int(1 // time.dt), curve=curve.out_expo)
-        invoke(self.start_fall, delay=self.fall_after)
+    def check_collisions(self, movement_direction):
+        # Verificando colisões para cada direção
+        for offset in [Vec3(0.5, 0, 0), Vec3(-0.5, 0, 0), Vec3(0, 0, 0.5), Vec3(0, 0, -0.5)]:
+            ray = raycast(self.position + offset, movement_direction, ignore=[self], distance=movement_direction.length() + 0.6)
+            if ray.hit:
+                # Ajustar a posição para evitar que entre no objeto
+                self.position -= movement_direction * (movement_direction.length() + ray.distance)
+                return True
+        return False
 
-    def start_fall(self):
-        self.entity.y_animator.pause()
+    def push_objects(self, movement_direction):
+        # Verificar se há objetos que podem ser empurrados
+        ray = raycast(self.position + self.forward * 0.5, self.forward, ignore=[self], distance=0.7)
+        if ray.hit and hasattr(ray.entity, 'pushable') and ray.entity.pushable:
+            self.current_pushable = ray.entity  # Armazenar o objeto atual que está sendo empurrado
+            
+            # Calcular a direção de empurrão com base no movimento do player
+            push_direction = movement_direction.normalized()
+            # Suavizar o movimento de empurrar, mantendo a posição Y do objeto
+            ray.entity.position += Vec3(push_direction.x, 0, push_direction.z) * time.dt * (self.run_speed * 2 / ray.entity.mass)  # Não alterar a posição Y
+            
+            # Ajustar a posição do player para evitar que entre no objeto
+            if push_direction.length() > 0:
+                overlap_distance = (self.current_pushable.scale_x / 2) + (self.scale_x / 2)
+                if distance(self.position, ray.entity.position) < overlap_distance:  # Usando a função distance correta
+                    self.position -= push_direction * (overlap_distance - distance(self.position, ray.entity.position))
 
-    def land(self):
-        self.air_time = 0
-        self.grounded = True
+            # Empurrar objetos próximos
+            self.check_nearby_pushable_objects(ray.entity)
+
+        else:
+            self.current_pushable = None  # Resetar se não houver objeto sendo empurrado
+
+    def check_nearby_pushable_objects(self, pushed_object):
+        # Verifica se há objetos próximos que também podem ser empurrados
+        nearby_objects = [obj for obj in self.get_pushable_objects() if obj != pushed_object]
+
+        for obj in nearby_objects:
+            if distance(pushed_object.position, obj.position) < 1.0:  # Ajuste a distância conforme necessário
+                # Calcular a direção para empurrar o objeto
+                direction_to_obj = (obj.position - pushed_object.position).normalized()
+                overlap_distance = (pushed_object.scale_x / 2) + (obj.scale_x / 2)
+
+                # Ajustar a posição do objeto empurrado
+                if distance(pushed_object.position, obj.position) < overlap_distance:
+                    obj.position += direction_to_obj * (overlap_distance - distance(pushed_object.position, obj.position))
+
+    def get_pushable_objects(self):
+        # Retorna uma lista de todos os objetos empurráveis na cena
+        return [entity for entity in scene.entities if hasattr(entity, 'pushable') and entity.pushable]
+
+    def is_on_ground(self):
+        ray = raycast(self.world_position, self.down, ignore=[self], distance=0.6)
+        return ray.hit
+
+    def is_pushing(self):
+        return hasattr(self, 'current_pushable') and self.current_pushable is not None
