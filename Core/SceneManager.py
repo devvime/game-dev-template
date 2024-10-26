@@ -22,3 +22,7 @@ class SceneManager:
     def update(self):
         if self.current_scene:
             self.current_scene.update()
+            
+    def input(self, key):
+        if self.current_scene:
+            self.current_scene.input(key)

@@ -55,7 +55,7 @@ class PhysicsEntity(Entity):
     def check_collisions(self, movement_direction):
         # Verificando colisões para cada direção
         for offset in [Vec3(0.5, 0, 0), Vec3(-0.5, 0, 0), Vec3(0, 0, 0.5), Vec3(0, 0, -0.5)]:
-            ray = raycast(self.position + offset, movement_direction, ignore=[self], distance=movement_direction.length() + 0.6)
+            ray = raycast(self.position + offset, movement_direction, ignore=[self], distance=movement_direction.length() + 0.5)
             if ray.hit:
                 # Ajustar a posição para evitar que entre no objeto
                 self.position -= movement_direction * (movement_direction.length() + ray.distance)
@@ -64,13 +64,12 @@ class PhysicsEntity(Entity):
 
     def push_objects(self, movement_direction):
         # Verificar se há objetos que podem ser empurrados
-        ray = raycast(self.position + self.forward * 0.5, self.forward, ignore=[self], distance=0.7)
+        ray = raycast(self.position + self.forward * 0.5, self.forward, ignore=[self], distance=0.6)
         if ray.hit and hasattr(ray.entity, 'pushable') and ray.entity.pushable:
             self.current_pushable = ray.entity  # Armazenar o objeto atual que está sendo empurrado
             # Calcular a direção de empurrão com base no movimento do player
             push_direction = movement_direction.normalized()
-            # Suavizar o movimento de empurrar
-            ray.entity.position += push_direction * time.dt * (self.run_speed * 2 / ray.entity.mass)  # Ajustar a força de empurrão
+            ray.entity.position += push_direction * 0.5  # Ajustar a força de empurrão aqui
         else:
             self.current_pushable = None  # Resetar se não houver objeto sendo empurrado
 

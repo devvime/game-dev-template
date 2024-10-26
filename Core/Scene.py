@@ -11,6 +11,9 @@ class Scene(Entity):
         
     def update(self):
         pass
+    
+    def input(self, key):
+        pass
 
     def enable(self):
         for element in self.elements:

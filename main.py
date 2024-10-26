@@ -24,12 +24,14 @@ game_scene = GameScene()
 scene_manager.add_scene('menu', menu_scene)
 scene_manager.add_scene('game', game_scene)
 
-scene_manager.switch_to('menu')
+scene_manager.switch_to('game')
 
 def update():
     scene_manager.update()
 
 def input(key):
+    scene_manager.input(key)
+    
     if key == '1':
         scene_manager.switch_to('menu')
     elif key == '2':

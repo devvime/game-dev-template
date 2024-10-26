@@ -20,6 +20,12 @@ class MenuScene(Scene):
     def addElements(self):
         self.add_element([self.title, self.start_button, self.exit_button])
         
+    def update(self):
+        pass
+    
+    def input(self, key):
+        pass
+        
     def start_game(self):
         self.scene_manager.switch_to('game')
 
