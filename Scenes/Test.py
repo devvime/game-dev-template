@@ -2,33 +2,30 @@ from ursina import *
 from ursina.shaders.screenspace_shaders.pixelation_shader import pixelation_shader
 from Core.Scene import Scene
 
+from physics3d import Debugger, BoxCollider, MeshCollider
+from physics3d.character_controller import CharacterController
+from panda3d.bullet import BulletWorld
+
 from Entities.Player.Player import Player
 from Entities.Box.Box import Box
 
-class GameScene(Scene):
+class TestScene(Scene):
     def __init__(self):
         super().__init__()
         
+        self.world = BulletWorld()
+        self.debugger = Debugger(self.world, wireframe=True)        
+        self.world.setGravity(Vec3(0, -9.81, 0))
+        
         self.environment()
         
-        self.player = Player()
+        self.cube = Entity(model='cube', color=color.red)
+        # MeshCollider(self.world, self.cube, mass=1)
         
-        self.ground = Entity(
-            model='plane', 
-            scale=(30,1,30), 
-            color=color.yellow.tint(-.2), 
-            texture='white_cube', 
-            texture_scale=(30,30), 
-            collider='box'
-        )
+        self.player = CharacterController(self.world, self.cube)
         
-        self.obstacle = Box(mass=1)
-        self.obstacle.position = (2, 5, 5)
-        
-        self.obstacle2 = Box(mass=5, pushable=True)
-        self.obstacle2.position = (4, 10, 3)
-        
-        self.obstacle3 = Entity(model='cube', scale=(1, 1, 1), color=color.red, position=(6, 0.5, 0), collider='box')
+        self.ground = Entity(model='cube', position=(0, -3, 0), scale=(10, 0.1, 10), color=color.blue)
+        BoxCollider(self.world, self.ground)
         
         # Add elements to the scene element list
         self.addElements()
@@ -38,17 +35,24 @@ class GameScene(Scene):
             [
                 self.editorCamera, 
                 self.sky, 
-                self.light, 
-                self.player, 
-                self.ground, 
-                self.obstacle, 
-                self.obstacle2, 
-                self.obstacle3
+                self.light,
+                self.ground,
+                self.player
             ]
         )
         
     def update(self):
-        pass
+        dt = time.dt
+        self.world.doPhysics(dt)
+        
+        self.player.move((0, 0, 0), True)
+        
+        if held_keys['w']:
+            self.player.move((0, 0, 1), True)
+        if held_keys['s']:
+            self.player.move((0, 0, -1), True)
+        if held_keys['space']:
+            self.player.jump()
     
     def input(self, key):
         pass

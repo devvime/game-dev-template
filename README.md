@@ -40,8 +40,10 @@ pip install -r requirements.txt
 
 ```python
 from ursina import *
-from ursina.shaders import lit_with_shadows_shader
 from Core.Scene import Scene
+
+from Entities.Player.Player import Player
+from Entities.Box.Box import Box
 
 class GameScene(Scene):
     def __init__(self):
@@ -49,21 +51,55 @@ class GameScene(Scene):
         
         self.environment()
         
-        self.player = Entity(model='cube', texture='white_cube', position=(0, 10, 0), shader=lit_with_shadows_shader)
-        self.ground = Entity(model='plane', scale=(10, 1, 10), texture='white_cube', collider='box', shader=lit_with_shadows_shader)
+        self.player = Player()
+        
+        self.ground = Entity(
+            model='plane', 
+            scale=(30,1,30), 
+            color=color.yellow.tint(-.2), 
+            texture='white_cube', 
+            texture_scale=(30,30), 
+            collider='box'
+        )
+        
+        self.obstacle = Box(mass=1)
+        self.obstacle.position = (2, 5, 5)
+        
+        self.obstacle2 = Box(mass=5, pushable=True)
+        self.obstacle2.position = (4, 10, 3)
+        
+        self.obstacle3 = Entity(model='cube', scale=(1, 1, 1), color=color.red, position=(6, 0.5, 0), collider='box')
         
         # Add elements to the scene element list
         self.addElements()
         
     def addElements(self):
-        self.add_element([self.editorCamera, self.sky, self.light, self.player, self.ground])
+        self.add_element(
+            [
+                self.editorCamera, 
+                self.sky, 
+                self.light, 
+                self.player, 
+                self.ground, 
+                self.obstacle, 
+                self.obstacle2, 
+                self.obstacle3
+            ]
+        )
         
     def update(self):
+        pass
+    
+    def input(self, key):
         pass
         
     def environment(self):
         self.editorCamera = EditorCamera()
         self.sky = Sky()        
+        
+        camera.position = (0, 5, -10)
+        camera.rotation_x = -90
+        camera.fov = 120
         
         self.light = DirectionalLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))
