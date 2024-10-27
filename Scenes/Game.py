@@ -1,54 +1,56 @@
 from ursina import *
-from ursina.shaders.screenspace_shaders.pixelation_shader import pixelation_shader
+
+from physics3d import Debugger, BoxCollider, MeshCollider
+from panda3d.bullet import BulletWorld
+
 from Core.Scene import Scene
 
-from Entities.Player.Player import Player
-from Entities.Box.Box import Box
+from Entities.Player.PlayerCharacter import PlayerCharacter
 
 class GameScene(Scene):
     def __init__(self):
         super().__init__()
         
-        self.environment()
+        self.world = BulletWorld()
+        self.world.setGravity(Vec3(0, -9.81, 0))
         
-        self.player = Player()
+        # self.debugger = Debugger(self.world, wireframe=True)
         
-        self.ground = Entity(
-            model='plane', 
-            scale=(30,1,30), 
-            color=color.yellow.tint(-.2), 
-            texture='white_cube', 
-            texture_scale=(30,30), 
-            collider='box'
-        )
-        
-        self.obstacle = Box(mass=1)
-        self.obstacle.position = (2, 5, 5)
-        
-        self.obstacle2 = Box(mass=5, pushable=True)
-        self.obstacle2.position = (4, 10, 3)
-        
-        self.obstacle3 = Entity(model='cube', scale=(1, 1, 1), color=color.red, position=(6, 0.5, 0), collider='box')
-        
-        # Add elements to the scene element list
+        self.create()
         self.addElements()
         
-    def addElements(self):
-        self.add_element(
-            [
-                self.editorCamera, 
-                self.sky, 
-                self.light, 
-                self.player, 
-                self.ground, 
-                self.obstacle, 
-                self.obstacle2, 
-                self.obstacle3
-            ]
+    def create(self):
+        
+        self.environment()
+        
+        self.player = PlayerCharacter(self.world)
+        
+        self.ground = Entity(
+          model='cube', 
+          position=(0, -3, 0), 
+          scale=(100, 0.1, 100),
+          color=color.gray,
+          texture='grass'
         )
+        BoxCollider(self.world, self.ground)
+        
+        self.box = Entity(model='cube', color=color.red, position=(3, 5, 2))
+        MeshCollider(self.world, self.box, mass=1)
+        
+    def addElements(self):
+        self.add_element([
+            self.editorCamera, 
+            self.sky, 
+            self.light, 
+            self.player,
+            self.player.player_skin,
+            self.ground,
+            self.box
+        ])
         
     def update(self):
-        pass
+        dt = time.dt
+        self.world.doPhysics(dt)
     
     def input(self, key):
         pass
@@ -57,10 +59,9 @@ class GameScene(Scene):
         self.editorCamera = EditorCamera()
         self.sky = Sky()        
         
-        # camera.shader = pixelation_shader
-        camera.position = (0, 5, -10)
+        camera.position = (0, 5, -1)
         camera.rotation_x = -90
-        camera.fov = 120
+        camera.fov = 130
         
         self.light = DirectionalLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))

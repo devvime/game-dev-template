@@ -4,7 +4,6 @@ from Core.SceneManager import SceneManager
 
 from Scenes.Menu import MenuScene
 from Scenes.Game import GameScene
-from Scenes.Test import TestScene
 
 app = Ursina(
     title='My Game',
@@ -21,13 +20,11 @@ scene_manager = SceneManager()
 
 menu_scene = MenuScene(scene_manager)
 game_scene = GameScene()
-test_scene = TestScene()
 
 scene_manager.add_scene('menu', menu_scene)
 scene_manager.add_scene('game', game_scene)
-scene_manager.add_scene('test', test_scene)
 
-scene_manager.switch_to('test')
+scene_manager.switch_to('game')
 
 def update():
     scene_manager.update()

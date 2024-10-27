@@ -1,8 +1,17 @@
 from ursina import *
 app = Ursina()
-e = Entity(model='plane', color=color.black, scale=100)
+e = Entity(
+          model='cube', 
+          position=(0, -3, 0), 
+          scale=(200, 0.1, 200),
+          color=color.gray,
+          texture='grass'
+        )
 EditorCamera()
 s = Sky()
+s.color = color.orange
+
+camera.fov = 120
 
 def input(key):
     if key == 'l':
@@ -15,6 +24,6 @@ def input(key):
 
 scene.fog_color = color.orange   # sets fog color
 scene.fog_density = .1    # sets exponential density
-scene.fog_density = (20, 200)
+scene.fog_density = (50, 200)
 
 app.run()

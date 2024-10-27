@@ -12,12 +12,12 @@ class SlowParent(Entity):
         self.position = self.target_position
         
 class FollowCharacterCamera:
-    def __init__(self, parent_entity, offset=Vec3(0, 4, -5), lag=0.02, **kwargs):
-        self.parent_entity = parent_entity
+    def __init__(self, player_character, offset=Vec3(0, 3, -5), lag=0.05, **kwargs):
+        self.player_character = player_character
         self.offset = offset
         self.lag = lag
-        self.target_position = Vec3(self.parent_entity.np.getPos() + self.offset)
+        self.target_position = Vec3(self.player_character.np.getPos() + self.offset)
 
     def update(self):
-        self.target_position = Vec3(lerp(self.target_position, Vec3(self.parent_entity.np.getPos() + self.offset), self.lag))
+        self.target_position = Vec3(lerp(self.target_position, Vec3(self.player_character.np.getPos() + self.offset), self.lag))
         camera.position = self.target_position
