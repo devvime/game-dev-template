@@ -8,6 +8,17 @@ from panda3d.bullet import BulletWorld
 
 from Core.Scene import Scene
 
+class FollowCharacterCamera:
+    def __init__(self, parent_entity, offset=Vec3(0, 4, -5), lag=0.03, **kwargs):
+        self.parent_entity = parent_entity
+        self.offset = offset
+        self.lag = lag
+        self.target_position = Vec3(self.parent_entity.np.getPos() + self.offset)
+
+    def update(self):
+        self.target_position = Vec3(lerp(self.target_position, Vec3(self.parent_entity.np.getPos() + self.offset), self.lag))
+        camera.position = self.target_position
+
 class TestScene(Scene):
     def __init__(self):
         super().__init__()
@@ -21,6 +32,8 @@ class TestScene(Scene):
         self.player_skin = Entity(model='cube', color=color.red, scale=(1,2,1))        
         self.player = CharacterController(self.world, self.player_skin)
         self.player.jump_speed = 5.5
+        
+        self.follow_character = FollowCharacterCamera(self.player)
         
         self.box = Entity(model='cube', color=color.red, position=(3, 5, 2))
         MeshCollider(self.world, self.box, mass=1)
@@ -41,7 +54,7 @@ class TestScene(Scene):
     def addElements(self):
         self.add_element(
             [
-                self.editorCamera, 
+                # self.editorCamera, 
                 self.sky, 
                 self.light,
                 self.ground,
@@ -54,9 +67,9 @@ class TestScene(Scene):
         dt = time.dt
         self.world.doPhysics(dt)
         
-        # camera.position = (0, 5, -10)
-        # camera.rotation_x = -90
-        # camera.fov = 120
+        camera.position = (0, 4, -5)
+        camera.rotation_x = 25
+        camera.fov = 120
         
         self.player.move((0, 0, 0), True)
         
@@ -71,17 +84,18 @@ class TestScene(Scene):
             self.player.rotate(30)
             
         # self.followCamera(self.player)
+        self.follow_character.update()
         
-    def followCamera(self, target, offset=Vec3(0, 4, -10), smoothness=0.5):
-      desired_position = Vec3(target.np.getPos() + offset)
-      camera.position = Vec3(lerp(camera.position, desired_position, smoothness))
+    def followCamera(self, target, offset=Vec3(0, 4, -5), smoothness=0.1):
+      target_position = Vec3(target.np.getPos() + offset)
+      camera.position = Vec3(lerp(camera.position, target_position, smoothness))
                 
     def input(self, key):
       if key == 'space':
         self.player.jump()
         
     def environment(self):
-        self.editorCamera = EditorCamera()
+        # self.editorCamera = EditorCamera()
         self.sky = Sky()        
         
         # camera.shader = pixelation_shader
