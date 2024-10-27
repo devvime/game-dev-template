@@ -49,8 +49,9 @@ class GameScene(Scene):
         ])
         
     def update(self):
-        dt = time.dt
-        self.world.doPhysics(dt)
+        if not self.paused:
+            dt = time.dt
+            self.world.doPhysics(dt)
     
     def input(self, key):
         pass

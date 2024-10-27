@@ -49,7 +49,8 @@ class GameScene(Scene):
         )
         
     def update(self):
-        pass
+        if not self.paused:
+            pass
     
     def input(self, key):
         pass

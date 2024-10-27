@@ -21,7 +21,8 @@ class MenuScene(Scene):
         self.add_element([self.title, self.start_button, self.exit_button])
         
     def update(self):
-        pass
+        if not self.paused:
+            pass
     
     def input(self, key):
         pass
