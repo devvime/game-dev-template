@@ -1,13 +1,12 @@
 from ursina import *
+from ursina.vec3 import Vec3
 from ursina.shaders.screenspace_shaders.pixelation_shader import pixelation_shader
-from Core.Scene import Scene
 
 from physics3d import Debugger, BoxCollider, MeshCollider
 from physics3d.character_controller import CharacterController
 from panda3d.bullet import BulletWorld
 
-from Entities.Player.Player import Player
-from Entities.Box.Box import Box
+from Core.Scene import Scene
 
 class TestScene(Scene):
     def __init__(self):
@@ -19,12 +18,21 @@ class TestScene(Scene):
         
         self.environment()
         
-        self.cube = Entity(model='cube', color=color.red)
-        # MeshCollider(self.world, self.cube, mass=1)
+        self.player_skin = Entity(model='cube', color=color.red, scale=(1,2,1))        
+        self.player = CharacterController(self.world, self.player_skin)
+        self.player.jump_speed = 5.5
         
-        self.player = CharacterController(self.world, self.cube)
+        self.box = Entity(model='cube', color=color.red, position=(3, 5, 2))
+        MeshCollider(self.world, self.box, mass=1)
         
-        self.ground = Entity(model='cube', position=(0, -3, 0), scale=(10, 0.1, 10), color=color.blue)
+        self.ground = Entity(
+          model='cube', 
+          position=(0, -3, 0), 
+          scale=(30, 0.1, 30),
+          color=color.yellow.tint(-.2),
+          texture='white_cube', 
+          texture_scale=(30,30)
+        )
         BoxCollider(self.world, self.ground)
         
         # Add elements to the scene element list
@@ -37,7 +45,8 @@ class TestScene(Scene):
                 self.sky, 
                 self.light,
                 self.ground,
-                self.player
+                self.player_skin,
+                self.player,
             ]
         )
         
@@ -45,26 +54,37 @@ class TestScene(Scene):
         dt = time.dt
         self.world.doPhysics(dt)
         
+        # camera.position = (0, 5, -10)
+        # camera.rotation_x = -90
+        # camera.fov = 120
+        
         self.player.move((0, 0, 0), True)
         
         if held_keys['w']:
-            self.player.move((0, 0, 1), True)
+            self.player.move((0, 0, 1.5), True)
         if held_keys['s']:
-            self.player.move((0, 0, -1), True)
-        if held_keys['space']:
-            self.player.jump()
-    
+            self.player.move((0, 0, -1.5), True)
+            
+        if held_keys['a']:
+            self.player.rotate(-30)
+        if held_keys['d']:
+            self.player.rotate(30)
+            
+        # self.followCamera(self.player)
+        
+    def followCamera(self, target, offset=Vec3(0, 4, -10), smoothness=0.5):
+      desired_position = Vec3(target.np.getPos() + offset)
+      camera.position = Vec3(lerp(camera.position, desired_position, smoothness))
+                
     def input(self, key):
-        pass
+      if key == 'space':
+        self.player.jump()
         
     def environment(self):
         self.editorCamera = EditorCamera()
         self.sky = Sky()        
         
         # camera.shader = pixelation_shader
-        camera.position = (0, 5, -10)
-        camera.rotation_x = -90
-        camera.fov = 120
         
         self.light = DirectionalLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))
