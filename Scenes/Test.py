@@ -7,24 +7,14 @@ from physics3d.character_controller import CharacterController
 from panda3d.bullet import BulletWorld
 
 from Core.Scene import Scene
-
-class FollowCharacterCamera:
-    def __init__(self, parent_entity, offset=Vec3(0, 4, -5), lag=0.03, **kwargs):
-        self.parent_entity = parent_entity
-        self.offset = offset
-        self.lag = lag
-        self.target_position = Vec3(self.parent_entity.np.getPos() + self.offset)
-
-    def update(self):
-        self.target_position = Vec3(lerp(self.target_position, Vec3(self.parent_entity.np.getPos() + self.offset), self.lag))
-        camera.position = self.target_position
+from Core.Utils import FollowCharacterCamera
 
 class TestScene(Scene):
     def __init__(self):
         super().__init__()
         
         self.world = BulletWorld()
-        self.debugger = Debugger(self.world, wireframe=True)        
+        # self.debugger = Debugger(self.world, wireframe=True)
         self.world.setGravity(Vec3(0, -9.81, 0))
         
         self.environment()
@@ -41,10 +31,9 @@ class TestScene(Scene):
         self.ground = Entity(
           model='cube', 
           position=(0, -3, 0), 
-          scale=(30, 0.1, 30),
-          color=color.yellow.tint(-.2),
-          texture='white_cube', 
-          texture_scale=(30,30)
+          scale=(100, 0.1, 100),
+          color=color.gray,
+          texture='grass'
         )
         BoxCollider(self.world, self.ground)
         
@@ -83,12 +72,7 @@ class TestScene(Scene):
         if held_keys['d']:
             self.player.rotate(30)
             
-        # self.followCamera(self.player)
         self.follow_character.update()
-        
-    def followCamera(self, target, offset=Vec3(0, 4, -5), smoothness=0.1):
-      target_position = Vec3(target.np.getPos() + offset)
-      camera.position = Vec3(lerp(camera.position, target_position, smoothness))
                 
     def input(self, key):
       if key == 'space':
@@ -96,11 +80,11 @@ class TestScene(Scene):
         
     def environment(self):
         # self.editorCamera = EditorCamera()
-        self.sky = Sky()        
+        self.sky = Sky()
         
         # camera.shader = pixelation_shader
         
-        self.light = DirectionalLight(shadows=True)
+        self.light = AmbientLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))
 
     def enable(self):
