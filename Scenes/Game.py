@@ -28,13 +28,13 @@ class GameScene(Scene):
         self.ground = Entity(
           model='cube', 
           position=(0, -3, 0), 
-          scale=(100, 0.1, 100),
+          scale=(10, 0.5, 10),
           color=color.gray,
-          texture='grass'
+          texture='white_cube'
         )
         BoxCollider(self.world, self.ground)
         
-        self.box = Entity(model='cube', color=color.red, position=(3, 5, 2))
+        self.box = Entity(model='cube', color=color.blue, position=(3, 5, 2))
         MeshCollider(self.world, self.box, mass=1)
         
     def addElements(self):

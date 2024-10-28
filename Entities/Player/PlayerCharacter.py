@@ -12,8 +12,8 @@ class PlayerCharacter(Entity):
       self.player = CharacterController(world, self.player_skin)
       self.player.jump_speed = 5.5
       
-      self.speed = 1.5
-      self.rotation_speed = 45
+      self.speed = 1.8
+      self.rotation_speed = 60
       
       self.followCharacterCamera = FollowCharacterCamera(self.player)
 
