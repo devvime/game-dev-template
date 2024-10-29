@@ -1,8 +1,8 @@
 from ursina import *
 
-from physics3d.character_controller import CharacterController
+from Core.Physic.character_controller import CharacterController
 
-from Core.Utils import FollowCharacterCamera
+from Core.Utils import FollowCharacterCamera, SlowParent
 
 class PlayerCharacter(Entity):
     def __init__(self, world, **kwargs):
@@ -15,11 +15,11 @@ class PlayerCharacter(Entity):
       self.speed = 1.8
       self.rotation_speed = 60
       
-      self.followCharacterCamera = FollowCharacterCamera(self.player)
+      # self.followCharacterCamera = FollowCharacterCamera(self.player)
 
     def update(self):      
       self.movement()
-      self.followCharacterCamera.update()
+      self.cameraConf()
       
     def input(self, key):
       if key == 'shift':
@@ -43,3 +43,11 @@ class PlayerCharacter(Entity):
             self.player.rotate(-self.rotation_speed)
         if held_keys['d']:
             self.player.rotate(self.rotation_speed)
+            
+    def cameraConf(self):
+      # self.followCharacterCamera.update()
+      camera.position = (0, 3, -5)
+      camera.rotation_x = 10
+      camera.fov = 120
+      
+      camera.parent = self.player_skin

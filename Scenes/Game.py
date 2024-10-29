@@ -1,6 +1,6 @@
 from ursina import *
 
-from physics3d import Debugger, BoxCollider, MeshCollider
+from Core.Physic import Debugger, BoxCollider, MeshCollider
 from panda3d.bullet import BulletWorld
 
 from Core.Scene import Scene
@@ -58,11 +58,7 @@ class GameScene(Scene):
         
     def environment(self):
         self.editorCamera = EditorCamera()
-        self.sky = Sky()        
-        
-        camera.position = (0, 5, -1)
-        camera.rotation_x = -90
-        camera.fov = 130
+        self.sky = Sky()
         
         self.light = DirectionalLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))

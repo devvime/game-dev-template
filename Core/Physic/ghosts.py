@@ -1,21 +1,20 @@
 from ursina import application
 from ursina import Entity, Vec3
-from physics3d.core import RigidBodyNode
+from Core.Physic.core import GhostNode
 from panda3d.bullet import (
     BulletWorld, BulletSphereShape, BulletPlaneShape, BulletBoxShape,
     BulletCylinderShape, BulletCapsuleShape, BulletConeShape, BulletConvexHullShape,
     BulletTriangleMeshShape, BulletTriangleMesh, BulletDebugNode
     )
 
-class Collider(RigidBodyNode):
-    def __init__(self, world:BulletWorld, entity:Entity, shape, name, rotation, mass):
+class Ghost(GhostNode):
+    def __init__(self, world:BulletWorld, entity:Entity, shape, name, rotation):
         super().__init__(name)
-        self.setMass(mass)
 
         self.addShape(shape)
         self.np = application.base.render.attachNewNode(self)
 
-        world.attachRigidBody(self)
+        world.attachGhost(self)
 
         if entity.parent:
             self.np.reparent_to(entity.parent)
@@ -26,10 +25,8 @@ class Collider(RigidBodyNode):
                 rotation[x] = hpr[x]
         self.np.setHpr(Vec3(*rotation))
         
-        position_x, position_y, position_z = entity.position.x, entity.position.y, entity.position.z
-        entity.set_position(Vec3(0, 0, 0))
+        self.np.setPos(entity.x, entity.y, entity.z)
         entity.reparent_to(self.np)
-        self.np.setPos(position_x, position_y, position_z)
     
     @property
     def position(self):
@@ -148,9 +145,9 @@ class Collider(RigidBodyNode):
         scale = self.scale
         self.np.setScale(scale[0], scale[1], val)
 
-class SphereCollider(Collider):
+class GhostSphere(Ghost):
     def __init__(
-        self, world:BulletWorld, entity:Entity, mass=0,
+        self, world:BulletWorld, entity:Entity,
         rotation=[None, None, None], scale=None
         ) -> None:
 
@@ -161,19 +158,19 @@ class SphereCollider(Collider):
             else:
                 scale = 0.5
 
-        super().__init__(world, entity, BulletSphereShape(scale), 'sphere', rotation, mass)
+        super().__init__(world, entity, BulletSphereShape(scale), 'sphere', rotation)
 
-class PlaneCollider(Collider):
+class GhostPlane(Ghost):
     def __init__(
-        self, world: BulletWorld, entity: Entity, mass=0,
+        self, world: BulletWorld, entity: Entity,
         rotation=[None, None, None]
         ) -> None:
 
-        super().__init__(world, entity, BulletPlaneShape(Vec3(0, 1, 0), 0), 'plane', rotation, mass)
+        super().__init__(world, entity, BulletPlaneShape(Vec3(0, 1, 0), 0), 'plane', rotation)
 
-class BoxCollider(Collider):
+class GhostBox(Ghost):
     def __init__(
-        self, world:BulletWorld, entity:Entity, mass=0,
+        self, world:BulletWorld, entity:Entity,
         rotation=[None, None, None], scale=[None, None, None]
         ) -> None:
         
@@ -181,30 +178,30 @@ class BoxCollider(Collider):
             for x in range(len(entity.scale)):
                 scale[x] = entity.scale[x]/2
 
-        super().__init__(world, entity, BulletBoxShape(Vec3(*scale)), 'box', rotation, mass)
+        super().__init__(world, entity, BulletBoxShape(Vec3(*scale)), 'box', rotation)
 
-class CylinderCollider(Collider):
+class GhostCylinder(Ghost):
     def __init__(
         self, world:BulletWorld, entity:Entity, radius=0.5,
-        height=1, mass=0, rotation=[None, None, None]
+        height=1, rotation=[None, None, None]
         ):
-        super().__init__(world, entity, BulletCylinderShape(radius, height, 1), 'cylinder', rotation, mass)
+        super().__init__(world, entity, BulletCylinderShape(radius, height, 1), 'cylinder', rotation)
 
-class CapsuleCollider(Collider):
+class GhostCapsule(Ghost):
     def __init__(
         self, world:BulletWorld, entity:Entity, radius=0.5,
-        height=1, mass=0, rotation=[None, None, None]
+        height=1, rotation=[None, None, None]
         ):
-        super().__init__(world, entity, BulletCapsuleShape(radius, height, 1), 'capsule', rotation, mass)
+        super().__init__(world, entity, BulletCapsuleShape(radius, height, 1), 'capsule', rotation)
 
-class ConeCollider(Collider):
+class GhostCone(Ghost):
     def __init__(
         self, world:BulletWorld, entity:Entity, radius=0.5,
         mass=0, height=1, rotation=[None, None, None]
         ):
-        super().__init__(world, entity, BulletConeShape(radius, height, 1), 'cone', rotation, mass)
+        super().__init__(world, entity, BulletConeShape(radius, height, 1), 'cone', rotation)
 
-class ConvexHullCollider(Collider):
+class GhostConvexHull(Ghost):
     def __init__(
         self, world:BulletWorld, entity:Entity,
         mass=0, rotation=[None, None, None]
@@ -216,11 +213,11 @@ class ConvexHullCollider(Collider):
         shape = BulletConvexHullShape()
         shape.addGeom(geom)
 
-        super().__init__(world, entity, shape, 'convex_hull', rotation, mass)
+        super().__init__(world, entity, shape, 'convex_hull', rotation)
 
-class MeshCollider(Collider):
+class GhostMesh(Ghost):
     def __init__(
-        self, world:BulletWorld, entity:Entity, mass=0,
+        self, world:BulletWorld, entity:Entity,
         dynamic=False, rotation=[None, None, None]
         ):
 
@@ -232,19 +229,4 @@ class MeshCollider(Collider):
 
         shape = BulletTriangleMeshShape(mesh, dynamic=dynamic)
 
-        super().__init__(world, entity, shape, 'mesh', rotation, mass)
-
-class Debugger(BulletDebugNode):
-    def __init__(self, world:BulletWorld, **opts) -> None:
-        super().__init__('Debug')
-        self.bounding_boxes=False
-        self.constraints=False
-        self.normals=False
-        self.wireframe=False
-
-        self.np = application.base.render.attachNewNode(self)
-        self.np.show()
-        world.setDebugNode(self)
-
-        for x in opts:
-            setattr(self, x, opts[x])
+        super().__init__(world, entity, shape, 'mesh', rotation)
