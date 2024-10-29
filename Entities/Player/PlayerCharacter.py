@@ -15,11 +15,11 @@ class PlayerCharacter(Entity):
       self.speed = 1.8
       self.rotation_speed = 60
       
-      # self.followCharacterCamera = FollowCharacterCamera(self.player)
+      self.cameraFollowConfig()
 
     def update(self):      
-      self.movement()
-      self.cameraConf()
+      self.movement()     
+      self.cameraFollow()
       
     def input(self, key):
       if key == 'shift':
@@ -44,10 +44,20 @@ class PlayerCharacter(Entity):
         if held_keys['d']:
             self.player.rotate(self.rotation_speed)
             
-    def cameraConf(self):
-      # self.followCharacterCamera.update()
+    def cameraFollowConfig(self):
       camera.position = (0, 3, -5)
-      camera.rotation_x = 10
-      camera.fov = 120
       
-      camera.parent = self.player_skin
+      self.playerPivot = Entity(model='sphere', scale=(2, 2, 2))
+      self.playerPivot.visible_self = False
+      
+      self.lag = 0.05
+      self.camera_target_position = Vec3(self.player.np.getPos())
+      
+    def cameraFollow(self):
+      camera.rotation_x = 10
+      camera.fov = 120      
+      camera.parent = self.playerPivot
+        
+      self.camera_target_position = Vec3(lerp(self.camera_target_position, Vec3(self.player.np.getPos()), self.lag))
+      self.playerPivot.position = self.camera_target_position      
+      self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
