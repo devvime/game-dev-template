@@ -8,14 +8,16 @@ class PlayerCharacter(Entity):
     def __init__(self, world, **kwargs):
       super().__init__(**kwargs)
       
-      self.player_skin = Entity(model='cube', color=color.red, scale=(1,2,1))        
+      self.player_skin = Entity(model='cube', color=color.red, scale=(1,2,1))
       self.player = CharacterController(world, self.player_skin)
       self.player.jump_speed = 5.5
       
       self.speed = 1.8
-      self.rotation_speed = 60
+      self.rotation_speed = 100
       
       self.cameraFollowConfig()
+      
+      self.player_test = Entity(model='cube', color=color.red, scale=(.2,.2,1), parent=self.player_skin, position=(.5,0,1))
 
     def update(self):      
       self.movement()     
@@ -37,7 +39,8 @@ class PlayerCharacter(Entity):
         if held_keys['w']:
             self.player.move((0, 0, self.speed), True)
         if held_keys['s']:
-            self.player.move((0, 0, -self.speed), True)
+            # self.player.move((0, 0, -self.speed), True)
+            self.player.rotate(self.rotation_speed * 2)
             
         if held_keys['a']:
             self.player.rotate(-self.rotation_speed)
@@ -60,4 +63,4 @@ class PlayerCharacter(Entity):
         
       self.camera_target_position = Vec3(lerp(self.camera_target_position, Vec3(self.player.np.getPos()), self.lag))
       self.playerPivot.position = self.camera_target_position      
-      self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
+      # self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
