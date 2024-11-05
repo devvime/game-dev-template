@@ -14,7 +14,7 @@ class GameScene(Scene):
         self.world = BulletWorld()
         self.world.setGravity(Vec3(0, -9.81, 0))
         
-        # self.debugger = Debugger(self.world, wireframe=True)
+        self.debugger = Debugger(self.world, wireframe=True)
         
         self.create()
         self.addElements()
@@ -35,7 +35,7 @@ class GameScene(Scene):
         BoxCollider(self.world, self.ground)
         
         self.box = Entity(model='cube', color=color.blue, position=(3, 5, 2))
-        MeshCollider(self.world, self.box, mass=1)
+        BoxCollider(self.world, self.box, mass=1, scale=(.5,.5,.5))
         
     def addElements(self):
         self.add_element([
