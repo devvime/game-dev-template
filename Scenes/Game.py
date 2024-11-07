@@ -28,7 +28,7 @@ class GameScene(Scene):
         self.ground = Entity(
           model='cube', 
           position=(0, -3, 0), 
-          scale=(10, 0.5, 10),
+          scale=(20, 0.5, 20),
           color=color.gray,
           texture='white_cube'
         )
@@ -39,7 +39,7 @@ class GameScene(Scene):
         
     def addElements(self):
         self.add_element([
-            self.editorCamera, 
+            # self.editorCamera,
             self.sky, 
             self.light, 
             self.player,
@@ -57,7 +57,7 @@ class GameScene(Scene):
         pass
         
     def environment(self):
-        self.editorCamera = EditorCamera()
+        # self.editorCamera = EditorCamera()
         self.sky = Sky()
         
         self.light = DirectionalLight(shadows=True)
