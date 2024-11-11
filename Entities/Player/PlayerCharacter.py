@@ -42,8 +42,8 @@ class PlayerCharacter(Entity):
         if key == 'space':
             self.isJumping = True
             self.loopAnim('jump')
-            invoke(self.jump, delay=0.8)
-            invoke(self.stopJump, delay=2)
+            invoke(self.jump, delay=0.1)
+            invoke(self.stopJump, delay=0.7)
                 
         self.animation(key)
 
@@ -75,7 +75,7 @@ class PlayerCharacter(Entity):
         
     def stopJump(self):
         self.isJumping = False
-        if self.isWalking:
+        if self.isWalking and not self.isRunning:
             self.loopAnim('walk')
         elif self.isRunning:
             self.loopAnim('run')
