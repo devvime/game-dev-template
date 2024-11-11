@@ -11,16 +11,17 @@ class PlayerCharacter(Entity):
         
         self.player_actor = Actor("../Assets/Models/Player/player.glb")
         self.player_actor.reparentTo(self.player_skin)
-        self.player_actor.enableBlend()
         self.player_actor_anims = ['idle', 'walk', 'run', 'jump']
         
         self.player = CharacterController(world, self.player_skin, radius=0.8, height=4.95)        
-        self.player.jump_speed = 5.5
+        self.player.jump_speed = 6
         
         self.speed = 1.8
-        self.rotation_speed = 100
+        self.rotation_speed = 180
         self.lastDir = ''
-        self.isMoving = False
+        self.isWalking = False
+        self.isRunning = False
+        self.isJumping = False
         
         self.cameraFollowConfig()
         self.loopAnim('idle')
@@ -32,34 +33,35 @@ class PlayerCharacter(Entity):
     def input(self, key):
         if key == 'shift':
             self.speed = self.speed * 2
+            self.isRunning = True
         
         if key == 'shift up':
             self.speed = self.speed / 2
+            self.isRunning = False
         
         if key == 'space':
-            self.player.jump()
-            self.player_actor.play('jump')            
-            invoke(self.stopJumpAnim, delay=0.8)
+            self.isJumping = True
+            self.loopAnim('jump')
+            invoke(self.jump, delay=0.8)
+            invoke(self.stopJump, delay=2)
                 
-        if held_keys['w'] or held_keys['a'] or held_keys['d'] or held_keys['s']:
-            if (not self.player_actor.getAnimControl('walk').isPlaying()):
-                self.loopAnim('walk')
-        else:
-            self.loopAnim('idle')
-            self.player_actor.disableBlend()
+        self.animation(key)
 
     def movement(self):
         self.player.move((0, 0, 0), True)
-        
-        if held_keys['w'] or held_keys['a'] or held_keys['d'] or held_keys['s']:
+                
+        if held_keys['w'] or held_keys['a'] or held_keys['s'] or held_keys['d']:
+            self.isWalking = True
             self.player.move((0, 0, self.speed), True)
+        else:
+            self.isWalking = False
         
         if held_keys['s']:
             if (self.lastDir == 'left'):
                 self.player.rotate(-self.rotation_speed)
             if (self.lastDir == 'right'):
                 self.player.rotate(self.rotation_speed)
-            
+                
         if held_keys['a']:
             self.player.rotate(-self.rotation_speed)
             self.lastDir = 'left'
@@ -68,23 +70,41 @@ class PlayerCharacter(Entity):
             self.player.rotate(self.rotation_speed)
             self.lastDir = 'right'
             
+    def jump(self):
+        self.player.jump()
+        
+    def stopJump(self):
+        self.isJumping = False
+        if self.isWalking:
+            self.loopAnim('walk')
+        elif self.isRunning:
+            self.loopAnim('run')
+        else:
+            self.loopAnim('idle')
+            
+    def animation(self, key):
+        if held_keys['w'] or held_keys['a'] or held_keys['d'] or held_keys['s']:
+            if self.isRunning:
+                if not self.player_actor.getAnimControl('run').isPlaying() and not self.isJumping:
+                    self.loopAnim('run')
+            else:
+                if (not self.player_actor.getAnimControl('walk').isPlaying() and not self.isJumping):
+                    self.loopAnim('walk')   
+        else:
+            if not self.isJumping:
+                self.loopAnim('idle')
+                self.player_actor.disableBlend()
+            
     def loopAnim(self, name):
         for anim in self.player_actor_anims:
             self.player_actor.stop(anim)
-        
-        self.player_actor.enableBlend()    
-        self.player_actor.setControlEffect(name, 0.2)
-        self.player_actor.setPlayRate(1, name)
+                      
         self.player_actor.loop(name)
-                
-    def stopJumpAnim(self):
-        self.player_actor.stop('jump')
-        self.player_actor.loop('idle')          
             
     def cameraFollowConfig(self):
         camera.position = (0, 1, -1.5)
         
-        self.playerPivot = Entity(model='sphere', scale=(2, 2, 2))
+        self.playerPivot = Entity(model='sphere', scale=3)
         self.playerPivot.visible_self = False
         
         self.lag = 0.05
