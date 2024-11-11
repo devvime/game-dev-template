@@ -32,8 +32,6 @@ class MenuScene(Scene):
 
     def enable(self):
         super().enable()
-        print("Menu Scene enabled!")
 
     def disable(self):
         super().disable()
-        print("Menu Scene disabled!")

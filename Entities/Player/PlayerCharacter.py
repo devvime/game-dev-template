@@ -95,10 +95,10 @@ class PlayerCharacter(Entity):
                 self.loopAnim('idle')
                 self.player_actor.disableBlend()
             
-    def loopAnim(self, name):
+    def loopAnim(self, name):        
         for anim in self.player_actor_anims:
             self.player_actor.stop(anim)
-                      
+        
         self.player_actor.loop(name)
             
     def cameraFollowConfig(self):
