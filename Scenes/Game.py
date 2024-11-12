@@ -44,7 +44,7 @@ class GameScene(Scene):
             self.sky, 
             self.light, 
             self.player,
-            self.player.player_skin,
+            self.player.player_entity,
             self.ground,
             self.box
         ])
@@ -59,7 +59,7 @@ class GameScene(Scene):
         
     def environment(self):
         # self.editorCamera = EditorCamera()
-        self.sky = Sky()
+        self.sky = Sky(texture='sky_sunset')
         
         self.light = DirectionalLight(shadows=True)
         self.light.look_at(Vec3(1,-1,1))
