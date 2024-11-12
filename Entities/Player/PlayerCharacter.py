@@ -106,14 +106,19 @@ class PlayerCharacter(Entity):
             self.loopAnim('idle')
     
     def attack(self):
-        attackList = ['attack1', 'attack2', 'attack3', 'attack4']        
+        attackList = [
+            { 'name': 'attack1', 'time': 1.9, 'playRate': 1.5 }, 
+            { 'name': 'attack2', 'time': 1.7, 'playRate': 1.5 }, 
+            { 'name': 'attack3', 'time': 2, 'playRate': 1.5 }, 
+            { 'name': 'attack4', 'time': 1.6, 'playRate': 1.5 }
+        ]
         camera.animate_position(Vec3(1, 1, -1.3), duration=1, curve=curve.in_sine)
         if not self.isJumping and not self.isAttaking:
             self.isAttaking = True
             self.player.move((0, 0, 0), True)
             currentAttack = random.choice(attackList)
-            self.loopAnim(currentAttack)
-            invoke(self.stopAttack, delay=2.1)
+            self.loopAnim(currentAttack['name'], currentAttack['playRate'])
+            invoke(self.stopAttack, delay=currentAttack['time'])
     
     def stopAttack(self):
         camera.animate_position(self.cameraPosition, duration=2, curve=curve.out_sine)
@@ -134,8 +139,9 @@ class PlayerCharacter(Entity):
                 self.loopAnim('idle')
                 self.player_actor.disableBlend()
             
-    def loopAnim(self, name):
-        self.player_actor.stop()        
+    def loopAnim(self, name, playRate = 1):
+        self.player_actor.stop()
+        self.player_actor.setPlayRate(playRate, name)
         self.player_actor.loop(name)
             
     def cameraFollowConfig(self):
