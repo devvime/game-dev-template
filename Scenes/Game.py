@@ -76,8 +76,8 @@ class GameScene(Scene):
 
         #     void main() {
         #         float Pixels = 1600.0;
-        #         float dx = 4.0 * (1.0 / Pixels);
-        #         float dy = 8.0 * (1.0 / Pixels);
+        #         float dx = 2.0 * (1.0 / Pixels);
+        #         float dy = 4.0 * (1.0 / Pixels);
         #         vec2 new_uv = vec2(dx * floor(uv.x / dx), dy * floor(uv.y / dy));
         #         color = texture(tex, new_uv);
         #     }

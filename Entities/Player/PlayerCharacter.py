@@ -29,6 +29,7 @@ class PlayerCharacter(Entity):
         self.isDead = False
         self.isArmed = False
         self.life = 100
+        self.cameraPosition = Vec3(0.5, 0.7, -1)
         
         self.cameraFollowConfig()
         self.loopAnim('idle')
@@ -106,6 +107,7 @@ class PlayerCharacter(Entity):
     
     def attack(self):
         attackList = ['attack1', 'attack2', 'attack3', 'attack4']        
+        camera.animate_position(Vec3(1, 1, -1.3), duration=1, curve=curve.in_sine)
         if not self.isJumping and not self.isAttaking:
             self.isAttaking = True
             self.player.move((0, 0, 0), True)
@@ -114,6 +116,7 @@ class PlayerCharacter(Entity):
             invoke(self.stopAttack, delay=2.1)
     
     def stopAttack(self):
+        camera.animate_position(self.cameraPosition, duration=2, curve=curve.out_sine)
         self.isAttaking = False
         self.movement()
         self.animation(None)
@@ -131,18 +134,17 @@ class PlayerCharacter(Entity):
                 self.loopAnim('idle')
                 self.player_actor.disableBlend()
             
-    def loopAnim(self, name):        
-        # for anim in self.player_actor_anims:
+    def loopAnim(self, name):
         self.player_actor.stop()        
         self.player_actor.loop(name)
             
     def cameraFollowConfig(self):
-        camera.position = (0, 1, -1.5)
+        camera.position = self.cameraPosition
         
         self.playerPivot = Entity(model='sphere', scale=3)
         self.playerPivot.visible_self = False
         
-        self.lag = 0.05
+        self.lag = 0.1
         self.camera_target_position = Vec3(self.player.np.getPos())
       
     def cameraFollow(self):
@@ -152,4 +154,4 @@ class PlayerCharacter(Entity):
         
         self.camera_target_position = Vec3(lerp(self.camera_target_position, Vec3(self.player.np.getPos()), self.lag))
         self.playerPivot.position = self.camera_target_position      
-        # self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
+        self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
