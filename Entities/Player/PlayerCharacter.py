@@ -1,5 +1,6 @@
 from ursina import *
 from direct.actor.Actor import Actor
+from panda3d.core import *
 import random
 
 from Core.Physic.character_controller import CharacterController
@@ -11,12 +12,13 @@ class PlayerCharacter(Entity):
         self.bindKeys()
         
         self.player_entity = Entity(scale=1.8, position=(0,-1.6,0), rotation=(0,-180,0))
+        self.player = CharacterController(world, self.player_entity, radius=0.8, height=4.95)
         
         self.player_actor = Actor("../Assets/Models/Player/player.glb")
         self.player_actor.reparentTo(self.player_entity)
-        self.player_actor_anims = ['idle', 'walk', 'run', 'jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'death']
         
-        self.player = CharacterController(world, self.player_entity, radius=0.8, height=4.95)        
+        self.player_actor_anims = ['idle', 'walk', 'run', 'jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'death']
+             
         self.player.jump_speed = 6
         
         self.speed = 1.8
@@ -30,6 +32,11 @@ class PlayerCharacter(Entity):
         self.isArmed = False
         self.life = 100
         self.cameraPosition = Vec3(0.5, 0.7, -1)
+        
+        self.rightHand = self.player_actor.expose_joint(None, "modelRoot", 'mixamorig:RightHand')
+        self.bat = loader.loadModel('../Assets/Models/Bat/bat.glb')
+        self.bat.set_scale(0.4)
+        self.bat.reparentTo(scene)
         
         self.cameraFollowConfig()
         self.loopAnim('idle')
@@ -46,6 +53,7 @@ class PlayerCharacter(Entity):
     def update(self):      
         self.movement()
         self.cameraFollow()
+        # self.parentActor()
       
     def input(self, key):
         if key == 'run':
@@ -161,3 +169,7 @@ class PlayerCharacter(Entity):
         self.camera_target_position = Vec3(lerp(self.camera_target_position, Vec3(self.player.np.getPos()), self.lag))
         self.playerPivot.position = self.camera_target_position      
         self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
+        
+    def parentActor(self):
+        self.player_actor.setPos(self.player.np.getPos())
+        self.player_actor.setHpr(self.player.np.getHpr())
