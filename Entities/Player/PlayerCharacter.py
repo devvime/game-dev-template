@@ -11,18 +11,17 @@ class PlayerCharacter(Entity):
         
         self.bindKeys()
         
-        self.player_entity = Entity(scale=1.8, position=(0,-1.6,0), rotation=(0,-180,0))
-        self.player = CharacterController(world, self.player_entity, radius=0.8, height=4.95)
+        self.player_entity = Entity()
+        self.player = CharacterController(world, self.player_entity, radius=0.5, height=2.7)
         
-        self.player_actor = Actor("../Assets/Models/Player/player.glb")
-        self.player_actor.reparentTo(self.player_entity)
+        self.player_actor = Actor("../Assets/Models/Player/player_test.glb")
+        self.player_actor.reparentTo(scene)
         
         self.player_actor_anims = ['idle', 'walk', 'run', 'jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'death']
              
-        self.player.jump_speed = 6
-        
         self.speed = 1.8
-        self.rotation_speed = 180
+        self.player.jump_speed = 6
+        self.rotation_speed = 210
         self.lastDir = ''
         self.isWalking = False
         self.isRunning = False
@@ -31,12 +30,10 @@ class PlayerCharacter(Entity):
         self.isDead = False
         self.isArmed = False
         self.life = 100
-        self.cameraPosition = Vec3(0.5, 0.7, -1)
+        self.cameraPosition = Vec3(0.3, 0.3, -0.45)
         
-        self.rightHand = self.player_actor.expose_joint(None, "modelRoot", 'mixamorig:RightHand')
-        self.bat = loader.loadModel('../Assets/Models/Bat/bat.glb')
-        self.bat.set_scale(0.4)
-        self.bat.reparentTo(scene)
+        self.playerBat = self.player_actor.find("**/Bat")
+        # self.playerBat.hide()
         
         self.cameraFollowConfig()
         self.loopAnim('idle')
@@ -53,7 +50,7 @@ class PlayerCharacter(Entity):
     def update(self):      
         self.movement()
         self.cameraFollow()
-        # self.parentActor()
+        self.parentActor()
       
     def input(self, key):
         if key == 'run':
@@ -67,9 +64,8 @@ class PlayerCharacter(Entity):
         if key == 'jump':
             if self.isAttaking: return
             self.isJumping = True
-            self.loopAnim('jump')
             invoke(self.jump, delay=0.1)
-            invoke(self.stopJump, delay=0.7)
+            invoke(self.stopJump, delay=0.8)
             
         if key == 'attack':
             self.attack()
@@ -103,6 +99,8 @@ class PlayerCharacter(Entity):
             
     def jump(self):
         self.player.jump()
+        self.loopAnim('jump')
+        self.player_actor.setPlayRate(1, 'jump')
         
     def stopJump(self):
         self.isJumping = False
@@ -120,7 +118,7 @@ class PlayerCharacter(Entity):
             { 'name': 'attack3', 'time': 2, 'playRate': 1.5 }, 
             { 'name': 'attack4', 'time': 1.6, 'playRate': 1.5 }
         ]
-        camera.animate_position(Vec3(1, 1, -1.3), duration=1, curve=curve.in_sine)
+        camera.animate_position(Vec3(0.6, 0.6, -0.8), duration=1, curve=curve.in_sine)
         if not self.isJumping and not self.isAttaking:
             self.isAttaking = True
             self.player.move((0, 0, 0), True)
@@ -129,10 +127,13 @@ class PlayerCharacter(Entity):
             invoke(self.stopAttack, delay=currentAttack['time'])
     
     def stopAttack(self):
-        camera.animate_position(self.cameraPosition, duration=2, curve=curve.out_sine)
         self.isAttaking = False
         self.movement()
         self.animation(None)
+        invoke(self.cameraAnimationReturn, delay=2)
+        
+    def cameraAnimationReturn(self):
+        camera.animate_position(self.cameraPosition, duration=2, curve=curve.out_sine)
     
     def animation(self, key):
         if held_keys['forward'] or held_keys['backward'] or held_keys['left'] or held_keys['right']:
@@ -171,5 +172,7 @@ class PlayerCharacter(Entity):
         self.playerPivot.rotation_y = - Vec3(self.player.np.getHpr()).x
         
     def parentActor(self):
-        self.player_actor.setPos(self.player.np.getPos())
-        self.player_actor.setHpr(self.player.np.getHpr())
+        playerPos = self.player.np.getPos()
+        playerRot = self.player.np.getHpr()
+        self.player_actor.setPos(playerPos.x, playerPos.y - 0.89, playerPos.z)
+        self.player_actor.setHpr(playerRot.x - 180, playerRot.y, playerRot.z)

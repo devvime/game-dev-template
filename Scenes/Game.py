@@ -15,20 +15,19 @@ class GameScene(Scene):
         self.world = BulletWorld()
         self.world.setGravity(Vec3(0, -9.81, 0))
         
-        self.debugger = Debugger(self.world, wireframe=True)
+        # self.debugger = Debugger(self.world, wireframe=True)
         
         self.create()
         self.addElements()
         
-    def create(self):
-        
+    def create(self):        
         self.environment()
         
         self.player = PlayerCharacter(self.world)
         
         self.ground = Entity(
           model='cube', 
-          position=(0, -3, 0), 
+          position=(0, -0.5, 0), 
           scale=(20, 0.5, 20),
           color=color.gray,
           texture='white_cube'
@@ -37,6 +36,9 @@ class GameScene(Scene):
         
         self.box = Entity(model='cube', color=color.blue, position=(3, 5, 2))
         BoxCollider(self.world, self.box, mass=1, scale=(.5,.5,.5))
+        
+        self.bat = Entity(model="../Assets/Models/Bat/bat.glb", position=(-4,0,2), rotation=(90,0,0), scale=0.25)
+        BoxCollider(self.world, self.bat, mass=1, scale=(0.05,0.05,0.55))
         
     def addElements(self):
         self.add_element([
