@@ -14,7 +14,7 @@ class PlayerCharacter(Entity):
         self.player_entity = Entity()
         self.player = CharacterController(world, self.player_entity, radius=0.5, height=2.7)
         
-        self.player_actor = Actor("../Assets/Models/Player/player_test.glb")
+        self.player_actor = Actor("../Assets/Models/Player/player.glb")
         self.player_actor.reparentTo(scene)
         
         self.player_actor_anims = ['idle', 'walk', 'run', 'jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'death']
@@ -30,7 +30,7 @@ class PlayerCharacter(Entity):
         self.isDead = False
         self.isArmed = False
         self.life = 100
-        self.cameraPosition = Vec3(0.3, 0.3, -0.45)
+        self.cameraPosition = Vec3(0, 0.4, -0.6)
         
         self.playerBat = self.player_actor.find("**/Bat")
         # self.playerBat.hide()
@@ -65,7 +65,6 @@ class PlayerCharacter(Entity):
             if self.isAttaking: return
             self.isJumping = True
             invoke(self.jump, delay=0.1)
-            invoke(self.stopJump, delay=0.8)
             
         if key == 'attack':
             self.attack()
@@ -101,6 +100,7 @@ class PlayerCharacter(Entity):
         self.player.jump()
         self.loopAnim('jump')
         self.player_actor.setPlayRate(1, 'jump')
+        invoke(self.stopJump, delay=0.8)
         
     def stopJump(self):
         self.isJumping = False
@@ -118,7 +118,7 @@ class PlayerCharacter(Entity):
             { 'name': 'attack3', 'time': 2, 'playRate': 1.5 }, 
             { 'name': 'attack4', 'time': 1.6, 'playRate': 1.5 }
         ]
-        camera.animate_position(Vec3(0.6, 0.6, -0.8), duration=1, curve=curve.in_sine)
+        camera.animate_position(Vec3(0.3, 0.5, -0.8), duration=1, curve=curve.in_sine)
         if not self.isJumping and not self.isAttaking:
             self.isAttaking = True
             self.player.move((0, 0, 0), True)
@@ -130,7 +130,7 @@ class PlayerCharacter(Entity):
         self.isAttaking = False
         self.movement()
         self.animation(None)
-        invoke(self.cameraAnimationReturn, delay=2)
+        invoke(self.cameraAnimationReturn, delay=0.5)
         
     def cameraAnimationReturn(self):
         camera.animate_position(self.cameraPosition, duration=2, curve=curve.out_sine)
@@ -159,7 +159,7 @@ class PlayerCharacter(Entity):
         self.playerPivot = Entity(model='sphere', scale=3)
         self.playerPivot.visible_self = False
         
-        self.lag = 0.1
+        self.lag = 0.2
         self.camera_target_position = Vec3(self.player.np.getPos())
       
     def cameraFollow(self):
