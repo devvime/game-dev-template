@@ -99,8 +99,7 @@ class PlayerCharacter(Entity):
     def jump(self):
         self.player.jump()
         self.loopAnim('jump')
-        self.player_actor.setPlayRate(1, 'jump')
-        invoke(self.stopJump, delay=0.8)
+        invoke(self.stopJump, delay=0.7)
         
     def stopJump(self):
         self.isJumping = False
