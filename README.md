@@ -11,27 +11,27 @@ pip install -r requirements.txt
 ```
 /my_game
 │
-├── /Assets
-│   ├── /Models          # 3D Models (formato .obj, .gltf, etc)
-│   ├── /Textures        # Textures images
-│   ├── /Audio           # Sond files
+├── /assets
+│   ├── /models          # 3D Models (format .obj, .gltf, etc)
+│   ├── /textures        # Textures images
+│   ├── /sounds           # Sound files
 │
-├── /Core                # Game scenes classes
-│   ├── Scene.py
-│   ├── SceneData.py
-│   ├── SceneManager.py
+├── /core                # Game scenes classes
+│   ├── scene.py
+│   ├── scene_data.py
+│   ├── scene_manager.py
 │
-├── /Entities            # Game object classes
-│   ├── Player.py
-│   ├── Enemy.py
-│   ├── Environment.py
+├── /entities            # Game object classes
+│   ├── player.py
+│   ├── enemy.py
+│   ├── environment.py
 │
-├── /Scenes              # Game scenes, each in a separate file
-│   ├── Menu.py
-│   ├── Game.py
+├── /scenes              # Game scenes, each in a separate file
+│   ├── menu.py
+│   ├── game.py
 │
-├── /Config              # Configuration files
-│   ├── Settings.json
+├── /config              # Configuration files
+│   ├── settings.json
 │
 ├── main.py              # Main game file
 ```
@@ -40,10 +40,10 @@ pip install -r requirements.txt
 
 ```python
 from ursina import *
-from Core.Scene import Scene
+from core.scene import Scene
 
-from Entities.Player.Player import Player
-from Entities.Box.Box import Box
+from entities.player.player import Player
+from entities.box.box import Box
 
 class GameScene(Scene):
     def __init__(self):

@@ -1,12 +1,12 @@
 from ursina import *
 from ursina.shaders.screenspace_shaders.pixelation_shader import pixelation_shader
 
-from Core.Physic import Debugger, BoxCollider, MeshCollider
+from core.physic import Debugger, BoxCollider, MeshCollider
 from panda3d.bullet import BulletWorld
 
-from Core.Scene import Scene
+from core.scene import Scene
 
-from Entities.Player.PlayerCharacter import PlayerCharacter
+from entities.player.player_character import PlayerCharacter
 
 class GameScene(Scene):
     def __init__(self):
@@ -26,11 +26,11 @@ class GameScene(Scene):
         self.player = PlayerCharacter(self.world)
         
         self.ground = Entity(
-          model='cube', 
-          position=(0, -0.5, 0), 
-          scale=(20, 0.5, 20),
-          color=color.gray,
-          texture='white_cube'
+            model='cube', 
+            position=(0, -0.5, 0), 
+            scale=(20, 0.5, 20),
+            color=color.gray,
+            texture='white_cube'
         )
         BoxCollider(self.world, self.ground)
         
@@ -44,6 +44,7 @@ class GameScene(Scene):
             self.light, 
             self.player,
             self.player.player_entity,
+            self.player.player_actor,
             self.ground,
             self.box
         ])

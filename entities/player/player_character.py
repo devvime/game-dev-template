@@ -3,7 +3,7 @@ from direct.actor.Actor import Actor
 from panda3d.core import *
 import random
 
-from Core.Physic.character_controller import CharacterController
+from core.physic.character_controller import CharacterController
 
 class PlayerCharacter(Entity):
     def __init__(self, world, **kwargs):
@@ -14,11 +14,11 @@ class PlayerCharacter(Entity):
         self.player_entity = Entity()
         self.player = CharacterController(world, self.player_entity, radius=0.5, height=2.7)
         
-        self.player_actor = Actor("../Assets/Models/Player/player.glb")
+        self.player_actor = Actor("../assets/models/player/player.glb")
         self.player_actor.reparentTo(scene)
         
         self.player_actor_anims = ['idle', 'walk', 'run', 'jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'death']
-             
+        
         self.speed = 1.8
         self.player.jump_speed = 6
         self.rotation_speed = 210

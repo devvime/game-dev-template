@@ -1,9 +1,9 @@
 from ursina import *
 from ursina.shaders import lit_with_shadows_shader
-from Core.SceneManager import SceneManager
+from core.scene_manager import SceneManager
 
-from Scenes.Menu import MenuScene
-from Scenes.Game import GameScene
+from scenes.menu import MenuScene
+from scenes.game import GameScene
 
 app = Ursina(
     title='My Game',

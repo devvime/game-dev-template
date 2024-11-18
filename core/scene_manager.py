@@ -1,4 +1,4 @@
-from Core.SceneData import sceneData
+from core.scene_data import scene_data
 
 class SceneManager:
     def __init__(self):
@@ -6,20 +6,20 @@ class SceneManager:
         self.current_scene = None
 
     def add_scene(self, name, scene):
-        sceneData[name] = scene
-        sceneData[name].pause()
-        sceneData[name].disable()
+        scene_data[name] = scene
+        scene_data[name].pause()
+        scene_data[name].disable()
 
     def switch_to(self, name):
-        for key, value in sceneData.items():
-            sceneData[key].pause()
-            sceneData[key].disable()
+        for key, value in scene_data.items():
+            scene_data[key].pause()
+            scene_data[key].disable()
             
         if self.current_scene:
             self.current_scene.pause()
             self.current_scene.disable()
         
-        self.current_scene = sceneData[name]
+        self.current_scene = scene_data[name]
         self.current_scene.enable()
         self.current_scene.resume()
         

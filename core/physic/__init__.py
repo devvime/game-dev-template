@@ -1,6 +1,6 @@
 from ursina import application
 from ursina import Entity, Vec3
-from Core.Physic.core import RigidBodyNode
+from core.physic.core import RigidBodyNode
 from panda3d.bullet import (
     BulletWorld, BulletSphereShape, BulletPlaneShape, BulletBoxShape,
     BulletCylinderShape, BulletCapsuleShape, BulletConeShape, BulletConvexHullShape,

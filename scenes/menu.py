@@ -1,5 +1,5 @@
 from ursina import *
-from Core.Scene import Scene
+from core.scene import Scene
 
 class MenuScene(Scene):
     def __init__(self, scene_manager):
